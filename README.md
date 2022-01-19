@@ -37,13 +37,30 @@ kobaltw --init kotlin
 # References
 
 - beust docs: https://beust.com/kobalt/home/index.html
-- 
+
+
 # Contribution 
-To build it:
-
+To build kobalt:
 ```
-$ ./kobaltw assemble
+./kobaltw assemble
 ```
-
-Please see [the web site](http://beust.com/kobalt/) for the full documentation.
-
+To release a new version:
+- Add `local.properties` file:
+```
+# kobalt will be released to https://github.com/oshai/kobalt/releases/latest
+github.username=oshai  
+# from https://github.com/settings/tokens
+github.accessToken=xxxxx
+```
+- Update version number in `kobalt/src/main/resources/kobalt.properties`.
+- Build:
+```
+./kobaltw assemble
+```
+- Use locally:
+  - `cp kobaltBuild/libs/kobalt-xxx.zip ~/.kobalt/wrapper/dist/`
+  - Update `kobalt/wrapper/kobalt-wrapper.properties` in target project.
+- Publish to github:
+```
+./kobaltw uploadGithub
+```
