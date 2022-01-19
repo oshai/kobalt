@@ -21,7 +21,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 val bs = buildScript {
-    repos("https://dl.bintray.com/cbeust/maven")
+    //repos("https://dl.bintray.com/cbeust/maven")
 }
 
 object Versions {
@@ -75,11 +75,6 @@ val wrapper = project {
 
     application {
         mainClass = "com.beust.kobalt.wrapper.Main"
-    }
-
-    bintray {
-        publish = true
-        sign = true
     }
 
     pom = createPom(name, "Wrapper for Kobalt")
@@ -146,9 +141,6 @@ val kobaltPluginApi = project {
         args("nowarn")
     }
 
-    bintray {
-        publish = true
-    }
 }
 
 val kobaltApp = project(kobaltPluginApi, wrapper) {
@@ -238,10 +230,6 @@ val kobaltApp = project(kobaltPluginApi, wrapper) {
 
     kotlinCompiler {
         args("nowarn")
-    }
-
-    bintray {
-        publish = true
     }
 
     github {

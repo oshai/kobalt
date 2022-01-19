@@ -5,9 +5,15 @@ import com.beust.kobalt.api.Project
 import com.google.inject.Inject
 import java.io.File
 
-class Git @Inject constructor() {
-    fun maybeTagRelease(project: Project, uploadResult: TaskResult, enabled: Boolean, annotated: Boolean,
-                        push: Boolean, tag: String, message: String) : TaskResult {
+class Git @Inject constructor(val localProperties: LocalProperties) {
+  companion object {
+    const val PROPERTY_ACCESS_TOKEN = "github.accessToken"
+    const val PROPERTY_USERNAME = "github.username"
+  }
+    fun maybeTagRelease(
+      project: Project, uploadResult: TaskResult, enabled: Boolean, annotated: Boolean,
+      push: Boolean, tag: String, message: String
+    ) : TaskResult {
         val result =
                 if (uploadResult.success && enabled) {
                     val tagSuccess = tagRelease(project, annotated, push, tag, message)
@@ -39,7 +45,11 @@ class Git @Inject constructor() {
                 git.tag().setName(version).setMessage(message).call()
             }
             if (push) {
-                git.push().setPushTags().call()
+              val username = localProperties.get(PROPERTY_USERNAME, "no_DOC_URL")
+              val password = localProperties.get(PROPERTY_ACCESS_TOKEN, "no_DOC_URL")
+                val cp: org.eclipse.jgit.transport.CredentialsProvider =
+                  org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider(username, password)
+                git.push().setCredentialsProvider(cp).setPushTags().call()
             }
             true
         } catch(ex: Exception) {

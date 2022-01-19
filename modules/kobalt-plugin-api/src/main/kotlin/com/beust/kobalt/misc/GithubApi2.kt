@@ -50,13 +50,13 @@ class GithubApi2 @Inject constructor(
         @POST("/repos/{owner}/{repo}/releases")
         fun createRelease(@Path("owner") owner: String,
                 @Path("repo") repo: String,
-                @Query("access_token") accessToken: String,
+                          @Header("Authorization")  accessToken: String,
                 @Body createRelease: CreateRelease): Call<CreateReleaseResponse>
 
         @GET("/repos/{owner}/{repo}/releases")
         fun getReleases(@Path("owner") owner: String,
                 @Path("repo") repo: String,
-                @Query("access_token") accessToken: String): Call<List<ReleasesResponse>>
+                        @Header("Authorization") accessToken: String): Call<List<ReleasesResponse>>
 
         @GET("/repos/{owner}/{repo}/releases")
         fun getReleasesNoAuth(@Path("owner") owner: String,
@@ -74,19 +74,20 @@ class GithubApi2 @Inject constructor(
             .create(Api::class.java)
 
     // JSON Retrofit error
-    class Error(val code: String)
-    class RetrofitError(var message: String = "", var errors : List<Error> = arrayListOf())
+    data class Error(val code: String)
+    data class RetrofitError(var message: String = "", var errors : List<Error> = arrayListOf())
 
     fun uploadRelease(packageName: String, tagName: String, zipFile: File) {
         kobaltLog(1, "Uploading release ${zipFile.name}")
 
         val username = localProperties.get(PROPERTY_USERNAME, DOC_URL)
         val accessToken = localProperties.get(PROPERTY_ACCESS_TOKEN, DOC_URL)
-        val response = service.createRelease(username, packageName, accessToken, CreateRelease(tagName))
+        val response = service.createRelease(username, packageName, "token " + accessToken, CreateRelease(tagName))
                 .execute()
         val code = response.code()
         if (code != Http.CREATED) {
             val error = Gson().fromJson(response.errorBody()?.string(), RetrofitError::class.java)
+            kobaltLog(2, "Upload error ${error}")
             throw KobaltException("Couldn't upload release, ${error.message}: " + error.errors[0].code)
         } else {
             val body = response.body()
@@ -125,7 +126,7 @@ class GithubApi2 @Inject constructor(
                     try {
                         val req =
                                 if (username != null && accessToken != null) {
-                                    service.getReleases(username, "kobalt", accessToken)
+                                    service.getReleases(username, "kobalt", "token " + accessToken)
                                 } else {
                                     service.getReleasesNoAuth("cbeust", "kobalt")
                                 }
