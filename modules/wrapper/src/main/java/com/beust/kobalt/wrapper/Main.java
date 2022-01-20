@@ -118,7 +118,7 @@ public class Main {
     }
 
     private static String downloadUrl(String version) {
-        return "https://beust.com/kobalt/kobalt-" + version + ".zip";
+        return "https://github.com/oshai/kobalt/releases/download/" + version + "/kobalt-" + version + ".zip";
     }
 
     private void initWrapperFile(String version) throws IOException {

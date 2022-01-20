@@ -24,7 +24,7 @@ class KobaltWrapperProperties @Inject constructor() {
     }
 
     private fun defaultUrlFor(version: String) =
-            "https://beust.com/kobalt/kobalt-$version.zip"
+            "https://github.com/oshai/kobalt/releases/download/$version/kobalt-$version.zip"
 
     private val file: File
             get() = File("$WRAPPER_DIR/$KOBALT_WRAPPER_PROPERTIES")
