@@ -88,7 +88,7 @@ class AndDependencyFilter : DependencyFilter {
 
 class DependencyManagerTest @Inject constructor(
     val dependencyManager: DependencyManager,
-    compilerFactory: BuildFileCompiler.IFactory,
+    compilerFactory: BuildFileCompiler.IFactory
 ) : BaseTest(compilerFactory) {
 
     private fun assertContains(dependencies: List<IClasspathDependency>, vararg ids: String) {

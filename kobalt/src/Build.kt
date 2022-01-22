@@ -25,7 +25,7 @@ val bs = buildScript {
 }
 
 object Versions {
-    val kotlin = "1.3.50"
+    val kotlin = "1.3.72"
     val okhttp = "3.9.1"
     val okio = "1.13.0"
     val retrofit = "2.3.0"
@@ -148,6 +148,7 @@ val kobaltApp = project(kobaltPluginApi, wrapper) {
     group = "com.beust"
     artifactId = name
     version = readVersion()
+    directory = "modules/kobalt"
 
     dependencies {
         // Used by the plugins
@@ -222,7 +223,7 @@ val kobaltApp = project(kobaltPluginApi, wrapper) {
             // Package the sources
             val currentDir = Paths.get(".").toAbsolutePath().normalize().toString()
             zipFolders("$currentDir/$buildDirectory/libs/all-sources/$projectName-$version-sources.jar",
-                    "$currentDir/$directory/src/main/kotlin",
+                    "$currentDir/modules/kobalt/src/main/kotlin",
                     "$currentDir/${kobaltPluginApi.directory}/src/main/kotlin")
             include(from("$buildDirectory/libs/all-sources"), to("$dir/kobalt/wrapper"), "$projectName-$version-sources.jar")
         }
@@ -269,8 +270,8 @@ fun zipFolders(zipFilePath: String, vararg foldersPath: String) {
 
 fun readVersion() : String {
     val localFile =
-            listOf("src/main/resources/kobalt.properties",
-                homeDir("kotlin", "kobalt", "src/main/resources/kobalt.properties")).first { File(it).exists() }
+            listOf("modules/kobalt/src/main/resources/kobalt.properties",
+                homeDir("kotlin", "kobalt", "modules/kobalt/src/main/resources/kobalt.properties")).first { File(it).exists() }
     with(java.util.Properties()) {
         load(java.io.FileReader(localFile))
         return getProperty("kobalt.version")
@@ -282,7 +283,7 @@ fun taskCopyVersionForWrapper(project: Project) : TaskResult {
     if (project.name == "kobalt-wrapper") {
         val toString = "modules/wrapper/kobaltBuild/classes"
         File(toString).mkdirs()
-        val from = Paths.get("src/main/resources/kobalt.properties")
+        val from = Paths.get("modules/kobalt/src/main/resources/kobalt.properties")
         val to = Paths.get("$toString/kobalt.properties")
         // Only copy if necessary so we don't break incremental compilation
         if (! to.toFile().exists() || (from.toFile().readLines() != to.toFile().readLines())) {
