@@ -13,3 +13,4 @@ out
 lib/kotlin-*
 build
 .history
+.class
