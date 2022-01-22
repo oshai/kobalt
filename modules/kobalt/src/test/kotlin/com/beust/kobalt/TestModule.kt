@@ -39,4 +39,8 @@ class TestModule : MainModule(Args(), TEST_KOBALT_SETTINGS) {
             }
         }).`in`(Scopes.SINGLETON)
     }
+    override fun bindExecutors() {
+        // in tests do nothing to bind new executors for each tests
+        // this avoids tests submitting tasks after pool shutdown
+    }
 }
