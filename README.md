@@ -52,7 +52,7 @@ github.username=oshai
 # from https://github.com/settings/tokens
 github.accessToken=xxxxx
 ```
-- Update version number in `kobalt/src/main/resources/kobalt.properties`.
+- Update version number in `src/main/resources/kobalt.properties`.
 - Build:
 ```
 ./kobaltw assemble
