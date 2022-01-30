@@ -279,104 +279,69 @@ class DynamicGraphExecutor<T>(val graph : DynamicGraph<T>, val factory: IThreadW
         threadIds.keys.forEach {
             table.header("Thread " + it.toString())
         }
-
-        fun toSeconds(millis: Long) = (millis / 1000).toInt().toString()
-
-        fun displayCompressedLog(table: AsciiTable.Builder) : AsciiTable.Builder {
-            data class CompressedLog(val timestamp: Long, val threadMap: HashMap<Long, String>)
-
-            fun compressLog(historyLog: List<HistoryLog>): ArrayList<CompressedLog> {
-                val compressed = arrayListOf<CompressedLog>()
-
-                var currentLog: CompressedLog? = null
-
-                val projectStart = hashMapOf<String, Long>()
-                fun toName(hl: HistoryLog) : String {
-                    var duration = ""
-                    if (! hl.start) {
-                        val start = projectStart[hl.name]
-                        if (start != null) {
-                            duration = " (" + ((hl.timestamp - start) / 1000)
-                                    .toInt().toString() + ")"
-                        } else {
-                            kobaltLog(1, "DONOTCOMMIT")
-                        }
-                    }
-                    return hl.name + duration
-                }
-
-                historyLog.forEach { hl ->
-                    kobaltLog(1, "CURRENT LOG: " + currentLog + " HISTORY LINE: " + hl)
-                    if (hl.start) {
-                        projectStart[hl.name] = hl.timestamp
-                    }
-                    if (currentLog == null) {
-                        currentLog = CompressedLog(hl.timestamp, hashMapOf(hl.threadId to hl.name))
-                    } else currentLog?.let { cl ->
-                        if (! hl.start || hl.timestamp - cl.timestamp < 1000) {
-                            kobaltLog(1, "    CURRENT LOG IS WITHING ONE SECOND: $hl")
-                            cl.threadMap[hl.threadId] = toName(hl)
-                        } else {
-                            kobaltLog(1, "  ADDING COMPRESSED LINE $cl")
-                            compressed.add(cl)
-                            currentLog = CompressedLog(hl.timestamp, hashMapOf(hl.threadId to toName(hl)))
-                        }
-                    }
-                }
-                return compressed
-            }
-
-            compressLog(historyLog).forEach {
-                val row = arrayListOf<String>()
-                row.add(toSeconds(it.timestamp))
-                it.threadMap.values.forEach {
-                    row.add(it)
-                }
-                table.addRow(row)
-            }
-
-            return table
-        }
-
-        fun displayRegularLog(table: AsciiTable.Builder) : AsciiTable.Builder {
-            if (historyLog.any()) {
-                if (historyLog[0] != null) {
-                    val start = historyLog[0].timestamp
-                    val projectStart = ConcurrentHashMap<String, Long>()
-                    historyLog.forEach { line ->
-                        val row = arrayListOf<String>()
-                        row.add(toSeconds(line.timestamp - start))
-                        threadIds.keys.forEach {
-                            if (line.threadId == it) {
-                                var duration = ""
-                                if (line.start) {
-                                    projectStart[line.name] = line.timestamp
-                                } else {
-                                    val projectStart = projectStart[line.name]
-                                    if (projectStart != null) {
-                                        duration = " (" + ((line.timestamp - projectStart) / 1000)
-                                                .toInt().toString() + ")"
-                                    } else {
-                                        warn("Couldn't determine project start: " + line.name)
-                                    }
-                                }
-                                row.add((line.name + duration))
-                            } else {
-                                row.add("")
-                            }
-                        }
-                        table.addRow(row)
-                    }
-                } else {
-                    warn("Couldn't find historyLog")
-                }
-            }
-            return table
-        }
-
-        kobaltLog(1, displayRegularLog(table).build())
     }
+
 }
+
+
+private fun displayCompressedLog(table: AsciiTable.Builder, historyLog: List<DynamicGraphExecutor.HistoryLog>) : AsciiTable.Builder {
+    data class CompressedLog(val timestamp: Long, val threadMap: HashMap<Long, String>)
+
+    fun compressLog(historyLog: List<DynamicGraphExecutor.HistoryLog>): ArrayList<CompressedLog> {
+        val compressed = arrayListOf<CompressedLog>()
+
+        var currentLog: CompressedLog? = null
+
+        val projectStart = hashMapOf<String, Long>()
+        fun toName(hl: DynamicGraphExecutor.HistoryLog) : String {
+            var duration = ""
+            if (! hl.start) {
+                val start = projectStart[hl.name]
+                if (start != null) {
+                    duration = " (" + ((hl.timestamp - start) / 1000)
+                        .toInt().toString() + ")"
+                } else {
+                    "log".kobaltLog(1, "DONOTCOMMIT")
+                }
+            }
+            return hl.name + duration
+        }
+
+        historyLog.forEach { hl ->
+            "log".kobaltLog(1, "CURRENT LOG: " + currentLog + " HISTORY LINE: " + hl)
+            if (hl.start) {
+                projectStart[hl.name] = hl.timestamp
+            }
+            if (currentLog == null) {
+                currentLog = CompressedLog(hl.timestamp, hashMapOf(hl.threadId to hl.name))
+            } else currentLog?.let { cl ->
+                if (! hl.start || hl.timestamp - cl.timestamp < 1000) {
+                    "log".kobaltLog(1, "    CURRENT LOG IS WITHING ONE SECOND: $hl")
+                    cl.threadMap[hl.threadId] = toName(hl)
+                } else {
+                    "log".kobaltLog(1, "  ADDING COMPRESSED LINE $cl")
+                    compressed.add(cl)
+                    currentLog = CompressedLog(hl.timestamp, hashMapOf(hl.threadId to toName(hl)))
+                }
+            }
+        }
+        return compressed
+    }
+
+    compressLog(historyLog).forEach {
+        val row = arrayListOf<String>()
+        row.add(toSeconds(it.timestamp))
+        it.threadMap.values.forEach {
+            row.add(it)
+        }
+        table.addRow(row)
+    }
+
+    return table
+}
+
+private fun toSeconds(millis: Long) = (millis / 1000).toInt().toString()
+
 
 fun main(argv: Array<String>) {
     val dg = DynamicGraph<String>().apply {
@@ -396,13 +361,11 @@ fun main(argv: Array<String>) {
                         kobaltLog(1, "  Running worker $it")
                         return TaskResult2(true, value = it)
                     }
-
                     override val priority: Int get() = 0
                     override val name: String = "workerName"
                 }
             }
         }
     }
-
     DynamicGraphExecutor(dg, factory).run()
 }
